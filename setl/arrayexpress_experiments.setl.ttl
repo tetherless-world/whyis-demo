@@ -1,0 +1,149 @@
+@prefix rdf:           <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:          <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:           <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl:           <http://www.w3.org/2002/07/owl#> .
+@prefix skos:          <http://www.w3.org/2004/02/skos/core#> .
+@prefix prov:          <http://www.w3.org/ns/prov#> .
+@prefix sio:           <http://semanticscience.org/resource/> .
+@prefix dcat:          <http://www.w3.org/ns/dcat#> .
+@prefix dcterms:       <http://purl.org/dc/terms/> .
+@prefix void:          <http://rdfs.org/ns/void#> .
+@prefix foaf:          <http://xmlns.com/foaf/0.1/> .
+@prefix ov:            <http://open.vocab.org/terms/> .
+@prefix setl:          <http://purl.org/twc/vocab/setl/> .
+@prefix csvw:          <http://www.w3.org/ns/csvw#> .
+@prefix pv:            <http://purl.org/net/provenance/ns#>.
+@prefix sp:            <http://spinrdf.org/sp#>.
+@prefix api_vocab: <http://purl.org/linked-data/api/vocab#>.
+
+@prefix :              <http://purl.org/twc/demo/mcbk/setl/> .
+
+@prefix nanopub: <http://www.nanopub.org/nschema#> .
+
+:ae_experiments a setl:XML;
+  setl:xpath "/experiments/experiment";
+  prov:wasGeneratedBy [
+     a setl:Extract;
+     prov:used <file:///apps/arrayexpress_experiments_melanoma.xml>
+  ].
+
+:ae_experiments_setl a setl:SemanticETLScript;
+  rdfs:label "ArrayExpress Experiment SETL Script".
+
+:ae_experiments_nanopubs a void:Dataset, dcat:Dataset, setl:Persisted;
+  prov:wasGeneratedBy :ae_experiment_setl, [
+    a setl:Transform, setl:JSLDT;
+    prov:used :ae_experiments;
+    setl:hasContext '''{
+    "@base" : "http://purl.org/twc/demo/mcbk/",
+    "schema": "http://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "whyis": "http://vocab.rpi.edu/whyis/",
+    "np": "http://www.nanopub.org/nschema#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "sio": "http://semanticscience.org/resource/",
+    "dc": "http://purl.org/dc/terms/",
+    "schema": "http://schema.org/",
+    "prov": "http://www.w3.org/ns/prov#"
+}''';
+    prov:value """[
+  {
+    "@id" : "http://purl.org/twc/demo/mcbk/arrayexpress/experiment/{{row.find('accession').text}}",
+    "@type": [ "schema:Dataset", "sio:SIO_000994"],
+    "schema:includedInDataCatalog" : { 
+      "@id" : "http://purl.org/twc/demo/mcbk/arrayexpress",
+      "@type" : "schema:DataCatalog",
+      "schema:name" : "ArrayExpress"
+    },
+    "schema:name" : "{{row.find('name').text}}",
+    "schema:description" : "{{row.find('description/text').text}}",
+    "schema:url" : "https://www.ebi.ac.uk/arrayexpress/experiments/{{row.find('accession').text}}",
+    "schema:identifier" : [
+      "https://www.ebi.ac.uk/arrayexpress/experiments/{{row.find('accession').text}}",
+      { 
+        "@if" : "row.find('secondaryaccession')", 
+        "@value" : "https://www.ebi.ac.uk/arrayexpress/experiments/{{row.find('secondaryaccession').text}}"
+      }
+    ],
+    "schema:dateCreated" : { "@if" : "row.find('submissiondate') is not None", "@value" : "{{row.find('submissiondate').text}}"},
+    "schema:dateUpdated" : { "@if" : "row.find('lastupdatedate') is not None", "@value" : "{{row.find('lastupdatedate').text}}"},
+    "schema:datePublished" : { "@if" : "row.find('releasedate') is not None", "@value" : "{{row.find('releasedate').text}}"},
+    "schema:creator" : [
+      {
+        "@for" : "provider in row.findall('provider')",
+        "@do" : {
+          "@if" : "provider.find('email') is not None and provider.find('email').text is not None",
+          "@id": "person/{{slugify(provider.find('email').text)}}",
+          "@type" : "schema:Person",
+          "schema:name" : "{{provider.find('contact').text}}",
+          "schema:email" : "{{provider.find('email').text}}"
+        }
+      }
+    ],
+    "schema:distribution" : [
+        {
+            "@id" : "https://www.ebi.ac.uk/arrayexpress/xml/v3/experiments/{{row.find('accession').text}}/files",
+            "@type" : ["schema:DataDownload", "http://purl.org/twc/demo/mcbk/arrayexpress/FileList"],
+            "fileFormat" : "application/xml"
+        },
+        {
+            "@id" : "https://www.ebi.ac.uk/arrayexpress/xml/v3/experiments/{{row.find('accession').text}}",
+            "@type" : ["schema:DataDownload", "http://purl.org/twc/demo/mcbk/arrayexpress/ExperimentMetadata"],
+            "fileFormat" : "application/xml"
+        }
+    ],
+    "sio:hasAttribute" : [
+      {
+        "@for" : "char in row.findall('samplecharacteristic')",
+        "@do" : {
+          "@for" : "v in char.findall('value')",
+          "@do" : {
+            "@type" : [
+              {
+                "@id" : "ns/{{slugify(char.find('category').text).title().replace('-','')}}",
+                "rdfs:label" : "{{char.find('category').text}}",
+                "@type" : "owl:Class"
+              }
+            ],
+            "sio:hasValue" : "{{v.text}}"
+          }
+        }
+      },
+      {
+        "@for" : "char in row.findall('experimentalvariable')",
+        "@do" : {
+          "@for" : "v in char.findall('value')",
+          "@do" : {
+            "@type" : [
+              {
+                "@id" : "ns/{{slugify(char.find('name').text).title().replace('-','')}}",
+                "rdfs:label" : "{{slugify(char.find('name').text).title().replace('-',' ')}}",
+                "@type" : "owl:Class"
+              }
+            ],
+            "sio:hasValue" : "{{v.text}}"
+          }
+        }
+      }
+    ],
+    "schema:keywords" : [
+      {
+        "@if" : "row.find('organism') is not None",
+        "@value" : "{{row.find('organism').text}}"
+      },
+      {
+        "@if" : "row.find('experimenttype') is not None",
+        "@value" : "{{row.find('experimenttype').text}}"
+      }
+    ]
+  }
+]"""
+  ].
+
+<ae_experiments.ttl> a pv:File;
+    dcterms:format "text/turtle";
+    prov:wasGeneratedBy [
+      a setl:Load;
+      prov:used :ae_experiments_nanopubs ;
+    ].
+
