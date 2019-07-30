@@ -4,7 +4,7 @@ import os
 import logging
 from datetime import timedelta
 
-project_name = "mcbk_demo"
+project_name = "whyis-demo"
 import importer
 
 import autonomic
@@ -19,7 +19,7 @@ LOD_PREFIX = 'http://purl.org/twc/demo/mcbk'
 
 skos = rdflib.Namespace("http://www.w3.org/2004/02/skos/core#")
 
-from mcbk_demo.agent import *
+from whyis_demo.agent import *
 
 # base config class; extend it to your needs.
 Config = dict(
@@ -53,9 +53,9 @@ Config = dict(
         'depot.storage_path' : '/data/files',
         'cache_max_age' : 3600*24*7,
     },
-    vocab_file = "/apps/mcbk_demo/vocab.ttl",
+    vocab_file = "/apps/whyis-demo/vocab.ttl",
     WHYIS_TEMPLATE_DIR = [
-        "/apps/mcbk_demo/templates",
+        "/apps/whyis-demo/templates",
     ],
     WHYIS_CDN_DIR = "/apps/mcbk_demo/static",
 
