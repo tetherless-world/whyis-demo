@@ -3,22 +3,70 @@ jobs:
   build:
     working_directory: /apps/whyis-demo
     docker:
-      - image: tetherlessworld/whyis:latest
+      - image: docker/compose:1.24.1
     steps:
+      - run:
+          name: Install system dependencies with apk
+          command: |
+            apk update && apk add bash
       - checkout
+      - setup_remote_docker
       - run:
-          name: Set permissions
-          command: chown -R whyis.whyis /apps/whyis-demo
-      - run:
-          name: Install application
-          command: pip3 install -e .
-      - run:
-          name: Start the whyis entrypoint (assumes cwd /apps/whyis)
-          command: cd /apps/whyis && /docker-entrypoint.sh
+          name: Build monolithic Docker image
+          command: |
+            cd docker/compose/monolithic && WHYIS_IMAGE_TAG=latest WHYIS_DEMO_IMAGE_TAG=latest docker-compose build whyis-demo
       - run:
           name: Run tests
-          command: cd /apps/whyis && python3 manage.py test --ci
+          command: .circleci/test.sh
       - store_artifacts:
-          path: /apps/whyis/test-results/py/htmlcov
+          path: test-results/py/htmlcov
       - store_test_results:
-          path: /apps/whyis/test-results
+          path: test-results
+      - run:
+          name: Build split Docker image
+          command: |
+            cd docker/compose/split/app && WHYIS_IMAGE_TAG=latest WHYIS_DEMO_IMAGE_TAG=latest docker-compose build whyis-demo-server
+      - run:
+          name: Push Docker images
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker login -u $DOCKER_USER -p $DOCKER_PASS
+              WHYIS_IMAGE_TAG=latest WHYIS_DEMO_IMAGE_TAG=latest docker-compose -f docker/compose/monolithic/docker-compose.yml push whyis-demo
+              WHYIS_IMAGE_TAG=latest WHYIS_DEMO_IMAGE_TAG=latest docker-compose -f docker/compose/split/app/docker-compose.yml push whyis-demo-server
+            fi
+#  lint-js:
+#    working_directory: /whyis
+#    docker:
+#      - image: node:12.6-stretch
+#    steps:
+#      - checkout
+#      - run:
+#          name: Install dependencies
+#          command: cd static && npm install
+#      - run:
+#          name: Lint the code
+#          command: .circleci/lint-js.sh
+#      - store_artifacts:
+#          path: lint-results
+#  lint-py:
+#    working_directory: /whyis
+#    docker:
+#      - image: python:3.7-stretch
+#    steps:
+#      - checkout
+#      - run:
+#          name: Install dependencies
+#          command: pip3 install flake8 pycodestyle pylint vulture
+#      - run:
+#          name: Lint the code
+#          command: .circleci/lint-py.sh
+#      - store_artifacts:
+#          path: lint-results
+#
+#workflows:
+#  version: 2
+#  build_lint:
+#    jobs:
+#      - build
+#      - lint-js
+#      - lint-py
