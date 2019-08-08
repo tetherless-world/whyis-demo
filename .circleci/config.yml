@@ -32,7 +32,7 @@ jobs:
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               docker login -u $DOCKER_USER -p $DOCKER_PASS
               WHYIS_IMAGE_TAG=latest WHYIS_DEMO_IMAGE_TAG=latest docker-compose -f docker/compose/monolithic/docker-compose.yml push whyis-demo
-              WHYIS_IMAGE_TAG=latest WHYIS_DEMO_IMAGE_TAG=latest docker-compose -f docker/compose/split/app/docker-compose.yml push whyis-demo-server
+              WHYIS_IMAGE_TAG=latest WHYIS_DEMO_IMAGE_TAG=latest docker-compose -f docker/compose/split/app-dev/docker-compose.yml push whyis-demo-server
             fi
 #  lint-js:
 #    working_directory: /whyis
