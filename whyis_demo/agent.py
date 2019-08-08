@@ -1,7 +1,7 @@
-import autonomic
+from whyis import autonomic
 from rdflib import *
 from slugify import slugify
-import nanopub
+from whyis import nanopub
 
 sioc_types = Namespace("http://rdfs.org/sioc/types#")
 sioc = Namespace("http://rdfs.org/sioc/ns#")

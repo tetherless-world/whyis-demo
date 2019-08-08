@@ -7,7 +7,7 @@ from datetime import timedelta
 project_name = "whyis-demo"
 import importer
 
-import autonomic
+from whyis import autonomic
 import agents.nlp as nlp
 import agents.hermit as hermit
 import rdflib
