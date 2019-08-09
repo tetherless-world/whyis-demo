@@ -18,7 +18,4 @@ RUN pip3 install -e /apps/whyis-demo
 # Copy built .js bundle
 #COPY --from=build-js --chown=whyis:whyis /static/js/whyis_demo_bundle.js* /apps/whyis-demo/static/js/
 
-# Copy load-data.sh script
-COPY /devbin/load-data.sh /
-
 CMD ["tail", "-f", "/dev/null"]
