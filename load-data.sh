@@ -10,4 +10,4 @@ fi
 python3 manage.py createuser -e whyis@whyis.com -p whyis --roles=admin
 
 # Load the SETL'd ArrayExpress data
-python3 manage.py load -i /apps/whyis-demo/data/ae_experiments.ttl -f turtle
+python3 manage.py load -i /apps/whyis-demo/data/ae_experiments.ttl -f turtle --temp-store IOMemory
